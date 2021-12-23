@@ -21,7 +21,7 @@ class Checksum():
 
 	def _blake_hash(self, public_key):
 		blake = BLAKE2b(digest_size = 32)
-		method = 1
+		method = 2
 
 		# try hash from ascii string, as per EIP-55 
 		if method == 1:
@@ -60,8 +60,9 @@ class Checksum():
 
 	def _bytes_to_bits_cycle(self, v):
 		_blake_hash = self._blake_hash(v)
+
 		ret = []
-		method = 4
+		method = 6
 		fill_bits = False
 
 		# try taking binary string from entire hash
@@ -116,6 +117,11 @@ class Checksum():
 			for b in nibs:
 				ret.append(b % 2)
 
+		elif method == 6:
+
+			for b in _blake_hash:
+				for j in range(8):
+					ret.append((b>>j)&0x01)
 
 		# print(ret)
 		return ret
@@ -125,10 +131,13 @@ class Checksum():
 		hash_bits = self._bytes_to_bits_cycle(public_key)
 		ret = []
 
-		for i, nibble in enumerate(nibbles):
+		k=0
+		for nibble in nibbles:
 			# print(hex(nibble), '    ', hash_bits[i])
-			if nibble >= 10 and hash_bits[i] == 1:
-				nibble += 6
+			if nibble >= 10:
+				if hash_bits[k] == 1:
+					nibble += 6
+				k+=1
 
 			ret.append(self.HEX_CHARS[nibble])
 
